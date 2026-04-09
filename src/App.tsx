@@ -138,21 +138,21 @@ function App() {
         <div className="max-w-4xl text-base leading-7 text-muted-foreground md:text-[0.98rem]">
           You can see more of my work on{" "}
           <a
-            href="#"
+            href="https://x.com/yogssh_sh"
             className="font-semibold text-foreground underline decoration-1 decoration-foreground underline-offset-4 transition-colors hover:text-muted-foreground"
           >
             Twitter
           </a>{" "}
           and more of my code on{" "}
           <a
-            href="#"
+            href="https://github.com/Jangidyogesh12"
             className="font-semibold text-foreground underline decoration-1 decoration-foreground underline-offset-4 transition-colors hover:text-muted-foreground"
           >
             GitHub
           </a>
           . You can also connect with me on{" "}
           <a
-            href="#"
+            href="https://www.linkedin.com/in/yogesh-sharma-45201b231/"
             className="font-semibold text-foreground underline decoration-1 decoration-foreground underline-offset-4 transition-colors hover:text-muted-foreground"
           >
             LinkedIn
