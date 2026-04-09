@@ -103,7 +103,7 @@ function App() {
                 Yogesh Sharma
               </h1>
               <p className="max-w-xl text-[0.95rem] leading-7 text-muted-foreground sm:text-base">
-                I like building things....
+                I like building random things....
                 <br />
                 building for the sentient century.
               </p>
