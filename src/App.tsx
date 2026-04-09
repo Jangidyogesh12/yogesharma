@@ -32,10 +32,9 @@ const projects: LinkItem[] = [
 
 const writing: LinkItem[] = [
   {
-    title: "Designing for Calm Interfaces",
-    description:
-      "How spacing, typography, and interaction rhythm shape a better product feel.",
-    href: "#",
+    title: "Behind Your X Feed {Phoenix and Thunder}",
+    description: "How your personalized real-time Twitter feed comes to life.",
+    href: "https://x.com/yogssh_sh/status/2020998993648681195",
   },
   {
     title: "Building with Intent",
