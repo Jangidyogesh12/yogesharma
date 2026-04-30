@@ -82,7 +82,7 @@ function LinkList({ items }: { items: LinkItem[] }) {
 
 function Section({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section className="max-w-[48rem] py-10 md:py-12">
+    <section className="max-w-3xl py-10 md:py-12">
       <h2 className="mb-2 text-[1.05rem] font-medium tracking-[-0.02em] text-foreground md:mb-5">
         {label}
       </h2>
@@ -93,7 +93,7 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
 
 function App() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[48rem] flex-col px-5 py-8 sm:px-8 sm:py-10 md:px-10 md:py-14">
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-5 py-8 sm:px-8 sm:py-10 md:px-10 md:py-14">
       <section className="rounded-2xl border border-border/70 bg-card/75 px-6 py-5 shadow-[0_1px_0_rgba(255,255,255,0.9)_inset,0_30px_80px_rgba(18,18,23,0.08)] backdrop-blur sm:px-8 sm:py-7 md:px-10 md:py-8">
         <div className="flex flex-col gap-4 md:gap-6">
           <Badge>Software Developer</Badge>
