@@ -9,7 +9,7 @@ const styles = {
     "pb-6 text-[1.9rem] font-medium leading-[0.95] tracking-[-0.06em] text-foreground sm:text-[2.4rem] md:pb-8 md:text-[3rem]",
   meta: "mb-8 text-[0.92rem] leading-6 text-muted-foreground",
   content:
-    "prose prose-foreground prose-headings:font-medium prose-headings:tracking-[-0.02em] max-w-none text-base leading-7 text-muted-foreground",
+    "prose prose-foreground prose-headings:font-medium prose-headings:tracking-[-0.02em] max-w-none text-base leading-7 text-muted-foreground text-justify",
   backLink:
     "mt-8 inline-block text-[0.92rem] font-medium text-foreground underline decoration-1 decoration-foreground underline-offset-4 transition-colors hover:text-muted-foreground",
 };
