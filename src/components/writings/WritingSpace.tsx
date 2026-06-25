@@ -3,7 +3,8 @@ import { Link, notFound } from "@tanstack/react-router";
 import { ComponentType } from "react";
 
 const styles = {
-  container: "max-w-3xl py-10 md:py-12",
+  container:
+    "max-w-3xl py-10 md:py-12 font-['Geist_Pixel',ui-monospace,monospace]",
   title:
     "pb-6 text-[1.9rem] font-medium leading-[0.95] tracking-[-0.06em] text-foreground sm:text-[2.4rem] md:pb-8 md:text-[3rem]",
   meta: "mb-8 text-[0.92rem] leading-6 text-muted-foreground",
