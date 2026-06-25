@@ -9,6 +9,28 @@
       content="Yogesh Sharma portfolio built with Vite, React, and TypeScript."
     />
     <title>Yogesh Sharma</title>
+    <script>
+      (function() {
+        var theme = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (theme === 'dark' || (!theme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        }
+      })();
+    </script>
+    <style>
+      html:not(.dark) {
+        color-scheme: light;
+        background-color: #f6f3ee;
+        color: #1f1c18;
+      }
+      html.dark {
+        color-scheme: dark;
+        background-color: #1a1a1a;
+        color: #ebebeb;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
