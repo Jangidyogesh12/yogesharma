@@ -40,19 +40,19 @@ export const writing: LinkItem[] = [
     title: "Building with Intent",
     description:
       "A practical take on making products that feel polished without over-designing.",
-    href: "#",
+    href: "/writing/building-with-intent",
     featured: true,
   },
   {
     title: "Frontend Details That Matter",
     description:
       "The small implementation choices that make a portfolio site feel premium.",
-    href: "#",
+    href: "/writing/frontend-details-that-matter",
   },
   {
     title: "Shipping Personal Projects Faster",
     description:
       "A lightweight workflow for going from idea to release without losing momentum.",
-    href: "#",
+    href: "/writing/shipping-personal-projects-faster",
   },
 ];

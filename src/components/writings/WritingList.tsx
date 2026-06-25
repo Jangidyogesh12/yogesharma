@@ -2,7 +2,7 @@ import { LinkList } from "@/components/molecules/LinkList";
 import { Section } from "@/components/molecules/Section";
 import { writing } from "@/lib/registry/registry";
 
-export function Writings() {
+export function WritingList() {
   return (
     <Section label="Writing">
       <div>
