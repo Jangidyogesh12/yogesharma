@@ -11,22 +11,10 @@ export const registry: Registry = {
 
 export const projects: LinkItem[] = [
   {
-    title: "Portfolio System",
+    title: "Hive",
     description:
-      "A reusable design and frontend system for landing pages and product surfaces.",
-    href: "#",
-  },
-  {
-    title: "Motion Library",
-    description:
-      "A small collection of refined UI interactions built for smooth web experiences.",
-    href: "#",
-  },
-  {
-    title: "Creator Dashboard",
-    description:
-      "Analytics, publishing, and workflow tools designed for clarity and speed.",
-    href: "#",
+      "Hive is a local-first graph database designed to store and query interconnected data efficiently.",
+    href: "https://github.com/Jangidyogesh12/Hive",
   },
 ];
 
@@ -42,17 +30,5 @@ export const writing: LinkItem[] = [
       "A practical take on making products that feel polished without over-designing.",
     href: "/writing/building-with-intent",
     featured: true,
-  },
-  {
-    title: "Frontend Details That Matter",
-    description:
-      "The small implementation choices that make a portfolio site feel premium.",
-    href: "/writing/frontend-details-that-matter",
-  },
-  {
-    title: "Shipping Personal Projects Faster",
-    description:
-      "A lightweight workflow for going from idea to release without losing momentum.",
-    href: "/writing/shipping-personal-projects-faster",
   },
 ];

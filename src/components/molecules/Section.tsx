@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
 
 const styles = {
-  section: "max-w-3xl py-10 md:py-12",
-  heading: "mb-2 text-[1.05rem] font-medium tracking-[-0.02em] text-foreground md:mb-5",
+  section: "max-w-3xl py-6",
+  heading:
+    "mb-3 text-[1.05rem] font-medium tracking-[-0.02em] text-foreground ",
   content: "min-w-0",
 };
 

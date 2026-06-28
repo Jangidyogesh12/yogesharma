@@ -33,14 +33,19 @@ export function LinkList({ items }: { items: LinkItem[] }) {
     <div className={styles.list}>
       {items.map((item) =>
         isExternal(item.href) ? (
-          <a key={item.title} href={item.href} target="_blank" rel="noopener noreferrer">
+          <a
+            key={item.title}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <LinkCard item={item} />
           </a>
         ) : (
           <Link key={item.title} to={item.href}>
             <LinkCard item={item} />
           </Link>
-        )
+        ),
       )}
     </div>
   );
