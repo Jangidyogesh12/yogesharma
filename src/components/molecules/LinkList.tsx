@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 
 const styles = {
   list: "grid gap-3",
-  card: "-mx-3 rounded-md border-transparent bg-transparent shadow-none transition-colors duration-150 hover:bg-[rgba(36,30,22,0.045)]",
+  card: "-mx-3 rounded-md border-transparent bg-transparent shadow-none transition-colors duration-150 hover:bg-[rgba(36,30,22,0.04)] dark:hover:bg-[rgba(255,255,255,0.04)]",
   cardContent: "p-0 sm:p-0",
   item: "grid gap-1 px-3 py-3 sm:px-3 sm:py-3.5",
   title: "text-[0.95rem] font-medium tracking-[-0.02em] text-foreground",
