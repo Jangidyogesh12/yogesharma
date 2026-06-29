@@ -25,10 +25,10 @@ export const writing: LinkItem[] = [
     href: "https://x.com/yogssh_sh/status/2020998993648681195",
   },
   {
-    title: "Building with Intent",
+    title: "Cyclic Redundancy Check",
     description:
-      "A practical take on making products that feel polished without over-designing.",
-    href: "/writing/building-with-intent",
+      "A short write-up about my understanding of CRC — how it works and the idea behind it.",
+    href: "/writing/cyclic-redundancy-check",
     featured: true,
   },
 ];
