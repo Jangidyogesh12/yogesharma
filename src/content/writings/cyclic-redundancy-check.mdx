@@ -1,0 +1,178 @@
+import { CodeBlock } from "@/components/writings/CodeBlock";
+
+export const meta = {
+    title: "Cyclic Redundancy Check",
+    description: "A deep dive into CRC — how it works, why it exists, and where it's hiding all around you.",
+    date: "2024-02-15",
+};
+
+# Cyclic Redundancy Check
+
+From the last month I was working on HIVE (an embedded graph db) and while working on it, I learned about checksumming. Found it interesting, gave a deeper thought on it, and realised it is everywhere on the internet — but there are very few blogs about it. Like how it works, the idea behind it, where it is used, and its internal working.
+
+## How CRC is Used in Databases
+
+Almost all databases use CRC to check if a datapoint is a valid entry or not — whether it has been corrupted while writing it on the disk. For my db, I used CRC checksum in WAL (Write Ahead Log). It is like for each log entry, the CRC value is saved with the entry, which is then verified at the time of data recovery to check if the data that needs to be recovered is corrupted or not.
+
+## The Checksum Algorithm
+
+Before the CRC algorithm, it was suggested to just calculate the simple checksum value and append it.
+
+Below is an example of how a simple 8-bit checksum works:
+
+Calculating checksum for **HELLO**:
+
+First, calculate the ASCII value of each letter:
+
+<CodeBlock language="text">
+{`H = 72
+E = 69
+L = 76
+L = 76
+O = 79`}
+</CodeBlock>
+
+Find the sum: **372**
+
+But since we are using 8-bit checksum, values that can be stored are from 0 to 255. So finding the modulo: **372 % 256 = 116** whose hex is **0x74**. This is stored with the HELLO.
+
+<CodeBlock language="text">
+{`Data     = HELLO
+Checksum = 0x74`}
+</CodeBlock>
+
+Then the receiver recalculates the checksum on its side and compares it. If it matches, good. If not, the data is corrupted.
+
+But this method has a flaw — both **HELLO** and **EHLLO** have the same checksum value. So you won't be able to differentiate between both, and the system will consider this as a valid value. But it is wrong. We need an algorithm which is bit-sensitive — even changing a single bit of value, the change should be visible in the checksum value. We need more sensitivity.
+
+## How the CRC Algorithm Works
+
+CRC is inspired from how division works. For instance, take the example of 9 divided by 2, which leaves a remainder of 1. Now, the remainder tells us that 9 is not perfectly divisible by 2. If we add the value required to cancel out the remainder — i.e. 1 — we get 10, which is divisible by 2.
+
+A similar analogy is used in CRC. Instead of normal integer division, CRC performs polynomial division using XOR operations. It computes a remainder (the CRC) and appends it to the original data such that the complete message becomes perfectly divisible by the generator polynomial, leaving a remainder of 0.
+
+At the receiver, the same CRC calculation is performed again. If the resulting remainder is 0 (or equivalently, the computed CRC matches the received CRC), the data is considered valid. Otherwise, it means the data was corrupted during transmission.
+
+## Two Methods to Calculate CRC32
+
+There are two methods to calculate the CRC32 of a string:
+
+1. Bitwise
+2. Using a lookup table
+
+### Bitwise CRC32 Algorithm
+
+<CodeBlock language="text">
+{`Take one byte
+Mix it into crc using XOR
+Then for its 8 bits:
+  Check last bit of crc
+  If last bit is 1:
+    Shift right
+    XOR with polynomial
+  If last bit is 0:
+    Only shift right`}
+</CodeBlock>
+
+<CodeBlock language="typescript">
+{`function crc32Bitwise(input: string): number {
+  let crc = 0xffffffff;
+
+  for (let i = 0; i < input.length; i++) {
+    crc = crc ^ input.charCodeAt(i);
+
+    for (let bit = 0; bit < 8; bit++) {
+      if ((crc & 1) === 1) {
+        crc = (crc >>> 1) ^ 0xedb88320;
+      } else {
+        crc = crc >>> 1;
+      }
+    }
+  }
+
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+console.log(crc32Bitwise("HELLO").toString(16));
+// Output: c1446436`}
+</CodeBlock>
+
+### Using a Lookup Table
+
+We needed this method because the bitwise CRC method was too slow. Now suppose a single text file contains a lot of data — it will take a lot of iterations to complete the CRC. But late engineers decided to read 8 bits simultaneously. Then they noticed that for 8-bit numbers (which range from 0 to 255), there is a specific remainder with respect to each number when divided by a specific polynomial — let's say a polynomial of degree 32. So a lookup table is created for this purpose. At a time, 8 bits are read, which made this algorithm much faster.
+
+#### Step 1: Generate the lookup table
+
+The table has 256 entries because one byte can have 256 possible values (0–255). Each entry is simply the result of running the bit-wise CRC algorithm for one byte.
+
+<CodeBlock language="typescript">
+{`function generateTable(): number[] {
+   const table = [];
+
+   for (let i = 0; i < 256; i++) {
+       let crc = i;
+
+       for (let bit = 0; bit < 8; bit++) {
+           if (crc & 1) {
+               crc = (crc >>> 1) ^ 0xEDB88320;
+           } else {
+               crc >>>= 1;
+           }
+       }
+
+       table[i] = crc >>> 0;
+   }
+
+   return table;
+}`}
+</CodeBlock>
+
+If you notice carefully, inside the table generation, we are still using the bit-wise algorithm. We're simply running it 256 times — once for every possible byte — and remembering the answers.
+
+#### Step 2: Use the table
+
+<CodeBlock language="typescript">
+{`const table = generateTable();
+
+function crc32(data: string) {
+   let crc = 0xFFFFFFFF;
+
+   for (let i = 0; i < data.length; i++) {
+
+       const byte = data.charCodeAt(i);
+
+       const index = (crc ^ byte) & 0xFF;
+
+       crc = (crc >>> 8) ^ table[index];
+   }
+
+   return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+console.log(crc32("HELLO").toString(16));
+// Output: C1446436`}
+</CodeBlock>
+
+Exactly the same CRC as the bit-wise version.
+
+## Where CRC is Used
+
+### Databases (SQLite, LevelDB, RocksDB, etc.)
+
+Every page or data block stores a CRC checksum. When the page is read from disk, the CRC is recalculated and compared. If the values don't match, the page is considered corrupted.
+
+### Computer Networks (Ethernet, Wi-Fi)
+
+Every network frame includes a CRC called the **Frame Check Sequence (FCS)**. The receiver recalculates the CRC before accepting the packet. If the CRC doesn't match, the packet is discarded.
+
+### File Formats (ZIP, PNG, GZIP)
+
+Files store a **CRC-32** value along with their contents. During extraction or opening, the CRC is recomputed. If it differs, the file has been corrupted or modified.
+
+### Storage Devices (Hard Drives, SSDs)
+
+CRC is used to detect corruption while data is transferred between the storage device and the computer. It helps ensure that the data read is exactly the data that was written.
+
+### Embedded Systems & Firmware Updates
+
+Before installing firmware, the device verifies its CRC. If the CRC is incorrect, the firmware update is rejected to prevent booting corrupted software.
