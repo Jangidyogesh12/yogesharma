@@ -1,0 +1,403 @@
+import { CodeBlock } from "@/components/writings/CodeBlock";
+
+export const meta = {
+    title: "Cache Eviction Algorithms — From FIFO to SIEVE",
+    description: "Exploring cache eviction algorithms while building buffer pooling for HIVE, and why SIEVE ended up as the final choice.",
+    date: "2025-07-15",
+};
+
+# Cache Eviction Algorithms — From FIFO to SIEVE
+
+While working on HIVE (an embedded graph database), I was implementing buffer pooling and a page cache. Both of these need a write cache, and every write cache needs an eviction policy — a strategy for deciding which entry to kick out when the cache is full.
+
+I came across a few algorithms: FIFO, LIFO, LRU, CLOCK, and SIEVE. I ended up using SIEVE, which I first spotted while reading through [TursoDB's](https://turso.tech/) source code. It is a modified version of the CLOCK algorithm and performs surprisingly well for how simple it is.
+
+Here is what I explored and why each algorithm did (or didn't) make the cut for HIVE.
+
+---
+
+## FIFO (First In, First Out)
+
+The simplest one. The entry that was added first gets evicted first. You just use a queue — push to the back, pop from the front.
+
+<CodeBlock language="rust">
+{`#[derive(Debug)]
+pub struct Cache<T> {
+    data: VecDeque<T>,
+}
+
+impl<T> Cache<T> {
+    pub fn new() -> Self {
+        Self {
+            data: VecDeque::new(),
+        }
+    }
+
+    pub fn add(&mut self, val: T) {
+        self.data.push_back(val);
+    }
+
+    pub fn remove(&mut self) {
+        self.data.pop_front();
+    }
+}`}
+</CodeBlock>
+
+<CodeBlock language="rust">
+{`fn main() {
+    let mut cache = Cache::new();
+
+    cache.add(6);
+    cache.add(8);
+    cache.add(9);
+    cache.add(10);
+
+    println!("Cache after adding elements: {:?}", cache);
+
+    cache.remove();
+
+    println!("Cache after applying remove method : {:?}", cache);
+}`}
+</CodeBlock>
+
+Output:
+
+<CodeBlock language="text">
+{`Cache after adding elements: Cache { data: [6, 8, 9, 10] }
+Cache after applying remove method : Cache { data: [8, 9, 10] }`}
+</CodeBlock>
+
+FIFO is dead simple but it ignores access patterns entirely. If you have a hot entry that gets accessed every second, FIFO might still evict it just because it was the oldest. For a database page cache, this is a dealbreaker — pages that are read frequently should stick around.
+
+---
+
+## LIFO (Last In, First Out)
+
+Same idea as FIFO, but flipped: the most recently added entry is removed first. Just swap `pop_front` for `pop_back`.
+
+<CodeBlock language="rust">
+{`impl<T> Cache<T> {
+    // ... same as FIFO ...
+
+    pub fn remove(&mut self) {
+        self.data.pop_back();
+    }
+}`}
+</CodeBlock>
+
+Output:
+
+<CodeBlock language="text">
+{`Cache after adding elements: Cache { data: [6, 8, 9, 10] }
+Cache after applying remove method : Cache { data: [6, 8, 9] }`}
+</CodeBlock>
+
+LIFO makes even less sense for a page cache. It would evict the page you just loaded, which is probably the one you are about to use again. Not great.
+
+---
+
+## LRU (Least Recently Used)
+
+This is the one everyone knows. When the cache is full, evict the entry that was accessed least recently. It makes intuitive sense — if you have not used something in a while, you probably will not use it again soon.
+
+Implementation-wise, LRU needs a combination of a HashMap (for O(1) lookups) and a doubly linked list (to track the access order). Every `get` moves the accessed entry to the head of the list. Every eviction removes from the tail.
+
+<CodeBlock language="rust">
+{`use std::{collections::HashMap, hash::Hash};
+
+pub struct Node<K, V> {
+    key: K,
+    value: V,
+    next: Option<usize>,
+    prev: Option<usize>,
+}
+
+pub struct LRUCache<K, V> {
+    nodes: Vec<Option<Node<K, V>>>,
+    map: HashMap<K, usize>,
+    head: Option<usize>,
+    tail: Option<usize>,
+    capacity: usize,
+}
+
+impl<K: Eq + Hash + Clone, V> LRUCache<K, V> {
+    pub fn new(capacity: usize) -> Self {
+        Self {
+            nodes: Vec::new(),
+            map: HashMap::new(),
+            head: None,
+            tail: None,
+            capacity,
+        }
+    }
+
+    pub fn get(&mut self, key: &K) -> Option<&V> {
+        let &idx = self.map.get(key)?;
+        self.detach(idx);
+        self.attach_head(idx);
+        Some(&self.nodes[idx].as_ref()?.value)
+    }
+
+    pub fn put(&mut self, key: K, value: V) {
+        if self.capacity == 0 {
+            return;
+        }
+
+        if let Some(&idx) = self.map.get(&key) {
+            self.nodes[idx].as_mut().unwrap().value = value;
+            self.detach(idx);
+            self.attach_head(idx);
+            return;
+        }
+
+        if self.map.len() >= self.capacity {
+            let tail_idx = self.tail.unwrap();
+            let evict_key = self.nodes[tail_idx].as_ref().unwrap().key.clone();
+            self.map.remove(&evict_key);
+            self.detach(tail_idx);
+
+            self.nodes[tail_idx] = Some(Node {
+                key: key.clone(),
+                value,
+                next: None,
+                prev: None,
+            });
+
+            self.map.insert(key, tail_idx);
+            self.attach_head(tail_idx);
+            return;
+        }
+
+        let idx = self.nodes.len();
+
+        self.nodes.push(Some(Node {
+            key: key.clone(),
+            value,
+            next: None,
+            prev: None,
+        }));
+
+        self.map.insert(key, idx);
+        self.attach_head(idx);
+    }
+
+    fn attach_head(&mut self, idx: usize) {
+        if idx >= self.nodes.len() {
+            return;
+        }
+
+        let node = self.nodes[idx].as_mut().unwrap();
+        node.prev = None;
+        node.next = self.head;
+
+        if let Some(old_head) = self.head {
+            self.nodes[old_head].as_mut().unwrap().prev = Some(idx);
+        } else {
+            self.tail = Some(idx);
+        }
+
+        self.head = Some(idx);
+    }
+
+    fn detach(&mut self, idx: usize) {
+        if idx >= self.nodes.len() {
+            return;
+        }
+
+        let node = self.nodes[idx].as_mut().unwrap();
+        let prev = node.prev;
+        let next = node.next;
+
+        if let Some(prev_idx) = prev {
+            self.nodes[prev_idx].as_mut().unwrap().next = next;
+        } else {
+            self.head = next;
+        }
+
+        if let Some(next_idx) = next {
+            self.nodes[next_idx].as_mut().unwrap().prev = prev;
+        } else {
+            self.tail = prev;
+        }
+    }
+}`}
+</CodeBlock>
+
+LRU is a solid algorithm, but under concurrency it falls apart. Every `get` mutates the linked list — which means every read needs a write lock. The HashMap reordering + linked list pointer juggling creates overhead, and in a database where multiple threads are reading pages, lock contention becomes a bottleneck.
+
+For an OS-level page cache or a database buffer pool, you want something that is fast and does not require a lock on every access. LRU is too heavy for that.
+
+---
+
+## CLOCK Algorithm (Second Chance)
+
+CLOCK is an approximation of LRU with way less overhead. Instead of maintaining a full access-order linked list, you just keep a **reference bit** for each cache entry and a **hand** (a pointer) that sweeps across the cache.
+
+Here is how it works:
+
+1. Every entry starts with its reference bit set to `true`.
+2. When an entry is accessed (`get`), its reference bit is set to `true`.
+3. When you need to evict, the hand scans entries:
+    - If the reference bit is **`true`** → the entry gets a second chance. Set the bit to `false` and move the hand forward.
+    - If the reference bit is **`false`** → evict this entry.
+4. The hand then continues from where it left off on the next eviction.
+
+No HashMap, no linked list reshuffling. Just a flat array and a bunch of booleans. That is why this algorithm is also called the **Second Chance algorithm** — every entry gets one extra life before being evicted.
+
+<CodeBlock language="rust">
+{`pub struct Clock<T> {
+    data: Vec<T>,
+    ref_bits: Vec<bool>,
+    hand: usize,
+    capacity: usize,
+}
+
+impl<T> Clock<T> {
+    pub fn new(capacity: usize) -> Self {
+        Self {
+            data: Vec::with_capacity(capacity),
+            ref_bits: Vec::with_capacity(capacity),
+            hand: 0,
+            capacity,
+        }
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.data.len() == self.capacity
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn add(&mut self, value: T) -> usize {
+        if self.data.len() < self.capacity {
+            let idx = self.data.len();
+            self.data.push(value);
+            self.ref_bits.push(true);
+            idx
+        } else {
+            let victim = self.find_victim();
+            self.data[victim] = value;
+            self.ref_bits[victim] = true;
+            victim
+        }
+    }
+
+    pub fn get(&mut self, idx: usize) -> Option<&T> {
+        if idx >= self.data.len() {
+            return None;
+        }
+        self.ref_bits[idx] = true;
+        Some(&self.data[idx])
+    }
+
+    fn find_victim(&mut self) -> usize {
+        loop {
+            if self.ref_bits[self.hand] {
+                self.ref_bits[self.hand] = false;
+            } else {
+                let victim = self.hand;
+                self.hand = (self.hand + 1) % self.capacity;
+                return victim;
+            }
+            self.hand = (self.hand + 1) % self.capacity;
+        }
+    }
+}`}
+</CodeBlock>
+
+CLOCK is great. It is used in operating systems for page replacement and in databases like PostgreSQL. But there is still room for improvement — specifically, the hand position is arbitrary and does not take advantage of the fact that newly inserted entries are unlikely to be evicted immediately.
+
+---
+
+## SIEVE Algorithm
+
+SIEVE is a tiny tweak on CLOCK that makes it simpler and, on many workloads, faster. I first saw it in [TursoDB's](https://turso.tech/) codebase and later found the paper — it consistently outperforms both LRU and CLOCK on real-world cache traces.
+
+The changes from CLOCK are two small ones:
+
+1. **New entries are inserted with their reference bit set to `false`** (in CLOCK it is `true`). This makes sense — a freshly inserted page has not been accessed yet, so it should not automatically get a second chance.
+
+2. **The hand always points to the most recently inserted entry.** Since that entry's reference bit is `false`, eviction naturally starts there. If the newest entry has not been accessed, it gets evicted first — which is often the right call for scan-heavy workloads (where you load a page once and never touch it again).
+
+Everything else stays the same: `get` sets the reference bit to `true`, and the eviction loop scans forward, clearing `true` bits until it finds a `false` one.
+
+<CodeBlock language="rust">
+{`pub struct SIEVE<T> {
+    queue: Vec<(T, bool)>,
+    hand: usize,
+    capacity: usize,
+}
+
+impl<T> SIEVE<T> {
+    pub fn new(capacity: usize) -> Self {
+        Self {
+            queue: Vec::with_capacity(capacity),
+            hand: 0,
+            capacity,
+        }
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.queue.len() == self.capacity
+    }
+
+    pub fn len(&self) -> usize {
+        self.queue.len()
+    }
+
+    pub fn add(&mut self, value: T) -> usize {
+        if !self.is_full() {
+            self.queue.push((value, false));
+        } else {
+            self.remove();
+            self.queue.push((value, false));
+        }
+        self.hand = self.queue.len() - 1;
+        self.hand
+    }
+
+    pub fn get(&mut self, idx: usize) -> Option<&T> {
+        self.queue.get_mut(idx).map(|(val, visited)| {
+            *visited = true;
+            &*val
+        })
+    }
+
+    fn remove(&mut self) -> usize {
+        loop {
+            if self.queue[self.hand].1 {
+                self.queue[self.hand].1 = false;
+                self.hand = (self.hand + 1) % self.capacity;
+            } else {
+                let victim = self.hand;
+                self.queue.remove(victim);
+
+                if self.hand >= self.queue.len() {
+                    self.hand = 0;
+                }
+                return victim;
+            }
+        }
+    }
+}`}
+</CodeBlock>
+
+That is the whole algorithm. No hashing, no linked list, no reference counting — just a flat array, a boolean per entry, and a hand that always resets to the newest entry.
+
+---
+
+## Why SIEVE for HIVE
+
+For a database buffer pool, the eviction algorithm sits on the hot path. Every page read and every page write goes through it. You want something that:
+
+- Has minimal overhead (no allocations, no pointer juggling).
+- Is cache-friendly (flat array, sequential scans).
+- Handles scan-resistant workloads (where a full table scan floods the cache with pages you will never touch again).
+
+SIEVE ticks all of these. The hand resets to the newest entry after each insert, which means a scan that loads hundreds of pages and never touches them again will quickly evict those one-time pages — they are sitting right at the hand with `visited = false`.
+
+Meanwhile, frequently accessed pages get their `visited` bit set to `true` on every `get`, so the hand skips them until they cool down. It is a neat, self-balancing system that requires almost no bookkeeping.
+
+If you are building a cache and LRU feels like overkill, give SIEVE a try. It might surprise you.

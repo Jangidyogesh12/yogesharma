@@ -31,4 +31,11 @@ export const writing: LinkItem[] = [
     href: "/writing/cyclic-redundancy-check",
     featured: true,
   },
+  {
+    title: "Cache Eviction Algorithms",
+    description:
+      "Exploring cache eviction algorithms while building buffer pooling for HIVE, and why SIEVE ended up as the final choice.",
+    href: "/writing/cache-eviction-algorithms",
+    featured: true,
+  },
 ];
