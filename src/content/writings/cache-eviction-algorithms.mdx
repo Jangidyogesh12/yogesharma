@@ -14,7 +14,6 @@ I came across a few algorithms: FIFO, LIFO, LRU, CLOCK, and SIEVE. I ended up us
 
 Here is what I explored and why each algorithm did (or didn't) make the cut for HIVE.
 
----
 
 ## FIFO (First In, First Out)
 
@@ -69,7 +68,6 @@ Cache after applying remove method : Cache { data: [8, 9, 10] }`}
 
 FIFO is dead simple but it ignores access patterns entirely. If you have a hot entry that gets accessed every second, FIFO might still evict it just because it was the oldest. For a database page cache, this is a dealbreaker — pages that are read frequently should stick around.
 
----
 
 ## LIFO (Last In, First Out)
 
@@ -94,7 +92,6 @@ Cache after applying remove method : Cache { data: [6, 8, 9] }`}
 
 LIFO makes even less sense for a page cache. It would evict the page you just loaded, which is probably the one you are about to use again. Not great.
 
----
 
 ## LRU (Least Recently Used)
 
@@ -227,7 +224,6 @@ LRU is a solid algorithm, but under concurrency it falls apart. Every `get` muta
 
 For an OS-level page cache or a database buffer pool, you want something that is fast and does not require a lock on every access. LRU is too heavy for that.
 
----
 
 ## CLOCK Algorithm (Second Chance)
 
@@ -309,7 +305,6 @@ impl<T> Clock<T> {
 
 CLOCK is great. It is used in operating systems for page replacement and in databases like PostgreSQL. But there is still room for improvement — specifically, the hand position is arbitrary and does not take advantage of the fact that newly inserted entries are unlikely to be evicted immediately.
 
----
 
 ## SIEVE Algorithm
 
@@ -386,7 +381,6 @@ impl<T> SIEVE<T> {
 
 That is the whole algorithm. No hashing, no linked list, no reference counting — just a flat array, a boolean per entry, and a hand that always resets to the newest entry.
 
----
 
 ## Why SIEVE for HIVE
 
