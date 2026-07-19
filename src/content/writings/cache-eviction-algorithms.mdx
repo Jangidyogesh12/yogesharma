@@ -6,7 +6,6 @@ export const meta = {
     date: "2026-07-15",
 };
 
-# Cache Eviction Algorithms — From FIFO to SIEVE
 
 While working on HIVE (an embedded graph database), I was implementing buffer pooling and a page cache. Both of these need a write cache, and every write cache needs an eviction policy — a strategy for deciding which entry to kick out when the cache is full.
 
