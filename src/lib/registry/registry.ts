@@ -34,7 +34,7 @@ export const writing: LinkItem[] = [
   {
     title: "Cache Eviction Algorithms",
     description:
-      "Exploring cache eviction algorithms while building buffer pooling for HIVE, and why SIEVE ended up as the final choice.",
+      "Exploring cache eviction algorithms",
     href: "/writing/cache-eviction-algorithms",
     featured: true,
   },
