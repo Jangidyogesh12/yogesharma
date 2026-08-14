@@ -12,7 +12,7 @@ function HeroDescription() {
   return (
     <p className={styles.heroDescription}>
       I like building low level softwares and write about them. Currently
-      working on {<InlineLink to="Arkitec" />} and <InlineLink to="Hive" />.
+      working on <InlineLink to="Hive" />.
     </p>
   );
 }
