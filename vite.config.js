@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import mdx from "@mdx-js/rollup";
+import remarkGfm from "remark-gfm";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
@@ -12,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   plugins: [
     TanStackRouterVite({ quoteStyle: "single" }),
-    mdx(),
+    mdx({ remarkPlugins: [remarkGfm] }),
     react(),
     tailwindcss(),
   ],

@@ -10,10 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/geist-mono": "^5.3.0",
     "@fontsource/geist-sans": "^5.2.5",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@radix-ui/react-slot": "^1.2.4",
+    "@shikijs/langs": "^4.4.3",
+    "@shikijs/themes": "^4.4.3",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-router": "^1.170.16",
     "class-variance-authority": "^0.7.1",
@@ -23,6 +26,8 @@
     "lucide-react": "^1.7.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "remark-gfm": "^4.0.1",
+    "shiki": "^4.4.3",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2"
   },

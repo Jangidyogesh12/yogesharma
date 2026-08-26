@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const styles = {
   wrapper: "relative group my-6 rounded-xl border border-border bg-card overflow-hidden",
@@ -6,8 +6,10 @@ const styles = {
   label: "text-xs font-medium text-muted-foreground uppercase tracking-wider",
   copyButton:
     "flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-transparent border-none p-0",
-  pre: "p-4 overflow-x-auto text-sm leading-relaxed m-0 bg-transparent font-['Geist_Mono',ui-monospace,monospace]",
-  code: "text-foreground",
+  code: "text-sm leading-relaxed m-0",
+  fallback:
+    "p-4 overflow-x-auto text-sm leading-relaxed m-0 bg-transparent font-['Geist_Mono',ui-monospace,monospace]",
+  codeText: "text-foreground",
 };
 
 type CodeBlockProps = {
@@ -16,6 +18,7 @@ type CodeBlockProps = {
 };
 
 export function CodeBlock({ children, language }: CodeBlockProps) {
+  const [html, setHtml] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -23,6 +26,32 @@ export function CodeBlock({ children, language }: CodeBlockProps) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  useEffect(() => {
+    let mounted = true;
+
+    import("@/lib/highlighter")
+      .then(({ getHighlighter }) => getHighlighter())
+      .then((highlighter) => {
+        const loaded = highlighter.getLoadedLanguages();
+        const lang =
+          language && loaded.includes(language) ? language : "text";
+
+        const out = highlighter.codeToHtml(children, {
+          lang,
+          themes: { light: "github-light", dark: "github-dark" },
+        });
+
+        if (mounted) setHtml(out);
+      })
+      .catch(() => {
+        if (mounted) setHtml(null);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [children, language]);
 
   return (
     <div className={styles.wrapper}>
@@ -42,9 +71,16 @@ export function CodeBlock({ children, language }: CodeBlockProps) {
           <span>{copied ? "Copied!" : "Copy"}</span>
         </button>
       </div>
-      <pre className={styles.pre}>
-        <code className={styles.code}>{children}</code>
-      </pre>
+      {html ? (
+        <div
+          className={styles.code}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      ) : (
+        <pre className={styles.fallback}>
+          <code className={styles.codeText}>{children}</code>
+        </pre>
+      )}
     </div>
   );
 }

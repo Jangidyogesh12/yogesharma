@@ -115,7 +115,7 @@ p {
 
 .prose h1 {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.04em;
   line-height: 1.1;
   margin-top: 0;
@@ -125,7 +125,7 @@ p {
 
 .prose h2 {
   font-size: 1.4rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1.2;
   margin-top: 2.5rem;
@@ -135,7 +135,7 @@ p {
 
 .prose h3 {
   font-size: 1.15rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.3;
   margin-top: 2rem;
@@ -145,7 +145,7 @@ p {
 
 .prose h4 {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.01em;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
@@ -202,4 +202,51 @@ p {
   margin: 1.5rem 0;
   color: var(--muted-foreground);
   font-style: italic;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+
+.shiki {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  background-color: #ffffff;
+}
+
+.dark .shiki {
+  background-color: var(--shiki-dark-bg) !important;
+  color: var(--shiki-dark) !important;
+}
+
+.dark .shiki span {
+  color: var(--shiki-dark) !important;
 }
