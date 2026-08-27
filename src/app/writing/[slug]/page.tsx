@@ -1,6 +1,7 @@
-import { Route } from "@/routes/writing.$slug";
-import { Link, notFound } from "@tanstack/react-router";
-import { ComponentType } from "react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getWriting, getWritingSlugs } from "@/lib/writings";
 
 const styles = {
   container: "max-w-3xl py-10 md:py-12",
@@ -13,28 +14,33 @@ const styles = {
     "mt-8 inline-block text-[0.92rem] font-medium text-foreground underline decoration-1 decoration-foreground underline-offset-4 transition-colors hover:text-muted-foreground",
 };
 
-type WritingsModule = {
-  default: ComponentType;
-  meta: Record<string, string>;
+type WritingPageProps = {
+  params: Promise<{ slug: string }>;
 };
 
-const mdxModules = import.meta.glob<{
-  default: ComponentType;
-  meta: Record<string, string>;
-}>("/src/content/writings/*.mdx", { eager: true });
+export function generateStaticParams() {
+  return getWritingSlugs().map((slug) => ({ slug }));
+}
 
-export function WritingSpace() {
-  const { slug } = Route.useParams();
-  const path = `/src/content/writings/${slug}.mdx`;
+export async function generateMetadata({
+  params,
+}: WritingPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const writing = await getWriting(slug);
+  if (!writing) return {};
 
-  if (!(path in mdxModules)) {
-    notFound();
-    return null;
-  }
+  return {
+    title: writing.meta.title,
+    description: writing.meta.description,
+  };
+}
 
-  const mod = mdxModules[path] as WritingsModule;
-  const Content = mod.default;
-  const meta = mod.meta;
+export default async function WritingPage({ params }: WritingPageProps) {
+  const { slug } = await params;
+  const writing = await getWriting(slug);
+  if (!writing) notFound();
+
+  const { meta, Content } = writing;
 
   return (
     <div className={styles.container}>
@@ -43,7 +49,7 @@ export function WritingSpace() {
       <div className={styles.content}>
         <Content />
       </div>
-      <Link to="/" className={styles.backLink}>
+      <Link href="/" className={styles.backLink}>
         ← Back to home
       </Link>
     </div>

@@ -1,17 +1,15 @@
+import { Me } from "@/components/Me";
 import { Projects } from "@/components/Projects";
 import { WritingList } from "@/components/writings/WritingList";
 import { More } from "@/components/More";
-import { Me } from "@/components/Me";
 
-function App() {
+export default function Home() {
   return (
-    <rect>
+    <>
       <Me />
       <Projects />
       <WritingList />
       <More />
-    </rect>
+    </>
   );
 }
-
-export default App;

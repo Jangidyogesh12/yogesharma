@@ -80,7 +80,7 @@ body {
   margin: 0;
   min-width: 320px;
   font-family:
-    "Geist Sans",
+    var(--font-geist-sans),
     ui-sans-serif,
     system-ui,
     -apple-system,
@@ -89,20 +89,12 @@ body {
     sans-serif;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 a {
   color: inherit;
 }
 
 p {
   margin: 0;
-}
-
-#root {
-  min-height: 100vh;
 }
 
 ::selection {
@@ -238,7 +230,7 @@ p {
   overflow-x: auto;
   font-size: 0.875rem;
   line-height: 1.7;
-  font-family: "Geist Mono", ui-monospace, monospace;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   background-color: #ffffff;
 }
 

@@ -1,6 +1,6 @@
 import { LinkItem } from "@/lib/registry/types";
 import { Card, CardContent } from "@/components/ui/card";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 
 const styles = {
   list: "grid gap-3",
@@ -42,7 +42,7 @@ export function LinkList({ items }: { items: LinkItem[] }) {
             <LinkCard item={item} />
           </a>
         ) : (
-          <Link key={item.title} to={item.href}>
+          <Link key={item.title} href={item.href}>
             <LinkCard item={item} />
           </Link>
         ),
